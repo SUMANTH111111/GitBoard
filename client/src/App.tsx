@@ -1,147 +1,110 @@
-import { useMemo, useState } from "react";
-import {
-  DndContext,
-  closestCorners,
-  type DragEndEvent,
-} from "@dnd-kit/core";
+import { useEffect, useState } from "react";
+import { DndContext } from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
 
-import Sidebar from "./components/Sidebar";
+import "./App.css";
+
 import Header from "./components/Header";
-import DroppableColumn from "./components/DroppableColumn";
+import Sidebar from "./components/Sidebar";
 import CreateIssueModal from "./components/CreateIssueModal";
+import DroppableColumn from "./components/DroppableColumn";
 
 import type { Task, Status } from "./types/task";
-
-const initialTasks: Task[] = [
-  {
-    id: "GB-101",
-    title: "Design Login Page",
-    priority: "High",
-    status: "TODO",
-  },
-  {
-    id: "GB-102",
-    title: "Create Sidebar",
-    priority: "Medium",
-    status: "TODO",
-  },
-  {
-    id: "GB-103",
-    title: "JWT Authentication",
-    priority: "High",
-    status: "IN PROGRESS",
-  },
-  {
-    id: "GB-100",
-    title: "Initialize Git Repository",
-    priority: "Low",
-    status: "DONE",
-  },
-];
+import { getTasks, createTask, updateTask } from "./api";
 
 export default function App() {
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
-  const [showModal, setShowModal] = useState(false);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [activePage, setActivePage] = useState("Board");
 
-  const todo = useMemo(
-    () => tasks.filter((t) => t.status === "TODO"),
-    [tasks]
-  );
+  useEffect(() => {
+    loadTasks();
+  }, []);
 
-  const doing = useMemo(
-    () => tasks.filter((t) => t.status === "IN PROGRESS"),
-    [tasks]
-  );
-
-  const done = useMemo(
-    () => tasks.filter((t) => t.status === "DONE"),
-    [tasks]
-  );
-
-  function addTask(task: Task) {
-    setTasks((prev) => [task, ...prev]);
+  async function loadTasks() {
+    try {
+      const data = await getTasks();
+      setTasks(data);
+    } catch (error) {
+      console.error("Failed to load tasks:", error);
+    }
   }
 
-  const nextId = `GB-${100 + tasks.length + 1}`;
+  function generateNextId(): string {
+    const max = tasks.reduce((highest, task) => {
+      const num = Number(task.id.replace("TASK-", ""));
+      return num > highest ? num : highest;
+    }, 0);
 
-  function handleDragEnd(event: DragEndEvent) {
+    return `TASK-${String(max + 1).padStart(3, "0")}`;
+  }
+
+  async function handleCreate(task: Task) {
+    try {
+      await createTask(task);
+      await loadTasks();
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error("Create failed:", error);
+    }
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
     if (!over) return;
 
-    const activeId = String(active.id);
-    const overId = String(over.id);
+    const taskId = String(active.id);
+    const newStatus = String(over.id) as Status;
 
-    const activeTask = tasks.find((t) => t.id === activeId);
-    if (!activeTask) return;
+    const currentTask = tasks.find((t) => t.id === taskId);
 
-    let newStatus: Status;
+    if (!currentTask || currentTask.status === newStatus) return;
 
-    if (
-      overId === "TODO" ||
-      overId === "IN PROGRESS" ||
-      overId === "DONE"
-    ) {
-      newStatus = overId;
-    } else {
-      const targetTask = tasks.find((t) => t.id === overId);
-      if (!targetTask) return;
-      newStatus = targetTask.status;
-    }
+    const updatedTask: Task = {
+      ...currentTask,
+      status: newStatus,
+    };
 
     setTasks((prev) =>
-      prev.map((task) =>
-        task.id === activeId
-          ? { ...task, status: newStatus }
-          : task
-      )
+      prev.map((t) => (t.id === taskId ? updatedTask : t))
     );
+
+    try {
+      await updateTask(taskId, updatedTask);
+    } catch {
+      await loadTasks();
+    }
   }
+
+  const todo = tasks.filter((t) => t.status === "TODO");
+  const progress = tasks.filter((t) => t.status === "IN PROGRESS");
+  const done = tasks.filter((t) => t.status === "DONE");
 
   return (
     <div className="app">
-      <Sidebar />
+      <Sidebar
+        active={activePage}
+        onSelect={setActivePage}
+      />
 
-      <main className="main">
-        <Header onNewIssue={() => setShowModal(true)} />
+      <main className="main-content">
+        <Header onCreate={() => setIsModalOpen(true)} />
 
-        <section className="stats">
-          <div className="stat-card">
-            <h2>{tasks.length}</h2>
-            <p>Total Tasks</p>
-          </div>
-
-          <div className="stat-card">
-            <h2>{doing.length}</h2>
-            <p>In Progress</p>
-          </div>
-
-          <div className="stat-card">
-            <h2>86%</h2>
-            <p>Sprint Health</p>
-          </div>
-        </section>
-
-        <DndContext
-          collisionDetection={closestCorners}
-          onDragEnd={handleDragEnd}
-        >
-          <section className="board">
+        <DndContext onDragEnd={handleDragEnd}>
+          <div className="board">
             <DroppableColumn title="TODO" tasks={todo} />
-            <DroppableColumn
-              title="IN PROGRESS"
-              tasks={doing}
-            />
+            <DroppableColumn title="IN PROGRESS" tasks={progress} />
             <DroppableColumn title="DONE" tasks={done} />
-          </section>
+          </div>
         </DndContext>
       </main>
 
-      {showModal && (
+      {isModalOpen && (
         <CreateIssueModal
-          nextId={nextId}
-          onClose={() => setShowModal(false)}
-          onCreate={addTask}
+          nextId={generateNextId()}
+          onClose={() => setIsModalOpen(false)}
+          onCreate={handleCreate}
         />
       )}
     </div>

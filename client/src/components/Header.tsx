@@ -1,18 +1,17 @@
-interface Props {
-  onNewIssue: () => void;
+interface HeaderProps {
+  onCreate: () => void;
 }
 
-export default function Header({ onNewIssue }: Props) {
+export default function Header({ onCreate }: HeaderProps) {
   return (
     <header className="header">
       <div>
-        <p className="small">CURRENT PROJECT</p>
-        <h1>Project Board</h1>
-        <span>Jira-inspired Project Management Platform</span>
+        <h1>GitBoard</h1>
+        <p>Agile Sprint Management Board</p>
       </div>
 
-      <button className="new-btn" onClick={onNewIssue}>
-        + New Issue
+      <button className="new-task-btn" onClick={onCreate}>
+        + Create Issue
       </button>
     </header>
   );
