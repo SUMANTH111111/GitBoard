@@ -23,6 +23,9 @@ export default function App() {
   const [activePage, setActivePage] = useState("Board");
   const [editingTask, setEditingTask] = useState<Task | null>(null);
 
+  const [search, setSearch] = useState("");
+  const [priorityFilter, setPriorityFilter] = useState("All");
+
   useEffect(() => {
     loadTasks();
   }, []);
@@ -53,8 +56,7 @@ export default function App() {
   }
 
   async function handleDelete(id: string) {
-    const ok = window.confirm("Delete this task?");
-    if (!ok) return;
+    if (!window.confirm("Delete this task?")) return;
 
     await deleteTask(id);
     await loadTasks();
@@ -68,24 +70,35 @@ export default function App() {
     const taskId = String(active.id);
     const newStatus = String(over.id) as Status;
 
-    const currentTask = tasks.find((t) => t.id === taskId);
+    const current = tasks.find((t) => t.id === taskId);
 
-    if (!currentTask || currentTask.status === newStatus) return;
+    if (!current || current.status === newStatus) return;
 
-    const updated: Task = {
-      ...currentTask,
+    await updateTask(taskId, {
+      ...current,
       status: newStatus,
-    };
+    });
 
-    await updateTask(taskId, updated);
     await loadTasks();
   }
 
-  const todo = tasks.filter((t) => t.status === "TODO");
-  const progress = tasks.filter(
+  const filteredTasks = tasks.filter((task) => {
+    const matchesSearch = task.title
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    const matchesPriority =
+      priorityFilter === "All" ||
+      task.priority === priorityFilter;
+
+    return matchesSearch && matchesPriority;
+  });
+
+  const todo = filteredTasks.filter((t) => t.status === "TODO");
+  const progress = filteredTasks.filter(
     (t) => t.status === "IN PROGRESS"
   );
-  const done = tasks.filter((t) => t.status === "DONE");
+  const done = filteredTasks.filter((t) => t.status === "DONE");
 
   return (
     <div className="app">
@@ -100,6 +113,10 @@ export default function App() {
             setEditingTask(null);
             setIsModalOpen(true);
           }}
+          search={search}
+          setSearch={setSearch}
+          priorityFilter={priorityFilter}
+          setPriorityFilter={setPriorityFilter}
         />
 
         <DndContext onDragEnd={handleDragEnd}>
