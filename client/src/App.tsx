@@ -1,11 +1,16 @@
 import { useMemo, useState } from "react";
+import {
+  DndContext,
+  closestCorners,
+  type DragEndEvent,
+} from "@dnd-kit/core";
 
 import Sidebar from "./components/Sidebar";
 import Header from "./components/Header";
-import KanbanColumn from "./components/KanbanColumn";
+import DroppableColumn from "./components/DroppableColumn";
 import CreateIssueModal from "./components/CreateIssueModal";
 
-import type { Task } from "./types/task";
+import type { Task, Status } from "./types/task";
 
 const initialTasks: Task[] = [
   {
@@ -39,17 +44,17 @@ export default function App() {
   const [showModal, setShowModal] = useState(false);
 
   const todo = useMemo(
-    () => tasks.filter((task) => task.status === "TODO"),
+    () => tasks.filter((t) => t.status === "TODO"),
     [tasks]
   );
 
   const doing = useMemo(
-    () => tasks.filter((task) => task.status === "IN PROGRESS"),
+    () => tasks.filter((t) => t.status === "IN PROGRESS"),
     [tasks]
   );
 
   const done = useMemo(
-    () => tasks.filter((task) => task.status === "DONE"),
+    () => tasks.filter((t) => t.status === "DONE"),
     [tasks]
   );
 
@@ -58,6 +63,40 @@ export default function App() {
   }
 
   const nextId = `GB-${100 + tasks.length + 1}`;
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+
+    if (!over) return;
+
+    const activeId = String(active.id);
+    const overId = String(over.id);
+
+    const activeTask = tasks.find((t) => t.id === activeId);
+    if (!activeTask) return;
+
+    let newStatus: Status;
+
+    if (
+      overId === "TODO" ||
+      overId === "IN PROGRESS" ||
+      overId === "DONE"
+    ) {
+      newStatus = overId;
+    } else {
+      const targetTask = tasks.find((t) => t.id === overId);
+      if (!targetTask) return;
+      newStatus = targetTask.status;
+    }
+
+    setTasks((prev) =>
+      prev.map((task) =>
+        task.id === activeId
+          ? { ...task, status: newStatus }
+          : task
+      )
+    );
+  }
 
   return (
     <div className="app">
@@ -83,11 +122,19 @@ export default function App() {
           </div>
         </section>
 
-        <section className="board">
-          <KanbanColumn title="TODO" tasks={todo} />
-          <KanbanColumn title="IN PROGRESS" tasks={doing} />
-          <KanbanColumn title="DONE" tasks={done} />
-        </section>
+        <DndContext
+          collisionDetection={closestCorners}
+          onDragEnd={handleDragEnd}
+        >
+          <section className="board">
+            <DroppableColumn title="TODO" tasks={todo} />
+            <DroppableColumn
+              title="IN PROGRESS"
+              tasks={doing}
+            />
+            <DroppableColumn title="DONE" tasks={done} />
+          </section>
+        </DndContext>
       </main>
 
       {showModal && (
