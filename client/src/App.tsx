@@ -8,6 +8,7 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import CreateIssueModal from "./components/CreateIssueModal";
 import DroppableColumn from "./components/DroppableColumn";
+import Analytics from "./pages/Analytics";
 
 import type { Task, Status } from "./types/task";
 import {
@@ -20,8 +21,9 @@ import {
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activePage, setActivePage] = useState("Board");
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+
+  const [activePage, setActivePage] = useState("Board");
 
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("All");
@@ -39,7 +41,7 @@ export default function App() {
     }
   }
 
-  function generateNextId(): string {
+  function generateNextId() {
     const max = tasks.reduce((highest, task) => {
       const num = Number(task.id.replace("TASK-", ""));
       return num > highest ? num : highest;
@@ -48,45 +50,28 @@ export default function App() {
     return `TASK-${String(max + 1).padStart(3, "0")}`;
   }
 
-  /* ---------- CREATE ---------- */
+  async function handleCreate(task: Task) {
+    await createTask(task);
+    await loadTasks();
 
-  async function handleCreate(task: Task): Promise<void> {
-    try {
-      await createTask(task);
-      await loadTasks();
-
-      setIsModalOpen(false);
-      setEditingTask(null);
-    } catch (err) {
-      console.error(err);
-    }
+    setIsModalOpen(false);
+    setEditingTask(null);
   }
 
-  /* ---------- UPDATE ---------- */
+  async function handleUpdate(task: Task) {
+    await updateTask(task.id, task);
+    await loadTasks();
 
-  async function handleUpdate(task: Task): Promise<void> {
-    try {
-      await updateTask(task.id, task);
-      await loadTasks();
-
-      setIsModalOpen(false);
-      setEditingTask(null);
-    } catch (err) {
-      console.error(err);
-    }
+    setIsModalOpen(false);
+    setEditingTask(null);
   }
-
-  /* ---------- DELETE ---------- */
 
   async function handleDelete(id: string) {
-    const ok = window.confirm("Delete this task?");
-    if (!ok) return;
+    if (!window.confirm("Delete this task?")) return;
 
     await deleteTask(id);
     await loadTasks();
   }
-
-  /* ---------- DRAG ---------- */
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -100,18 +85,15 @@ export default function App() {
 
     if (!current || current.status === newStatus) return;
 
-    const updated: Task = {
+    await updateTask(taskId, {
       ...current,
       status: newStatus,
-    };
+    });
 
-    await updateTask(taskId, updated);
     await loadTasks();
   }
 
-  /* ---------- SEARCH + FILTER ---------- */
-
-  const filtered = tasks.filter((task) => {
+  const filteredTasks = tasks.filter((task) => {
     const searchMatch = task.title
       .toLowerCase()
       .includes(search.toLowerCase());
@@ -123,11 +105,11 @@ export default function App() {
     return searchMatch && priorityMatch;
   });
 
-  const todo = filtered.filter((t) => t.status === "TODO");
-  const progress = filtered.filter(
+  const todo = filteredTasks.filter((t) => t.status === "TODO");
+  const progress = filteredTasks.filter(
     (t) => t.status === "IN PROGRESS"
   );
-  const done = filtered.filter((t) => t.status === "DONE");
+  const done = filteredTasks.filter((t) => t.status === "DONE");
 
   return (
     <div className="app">
@@ -137,50 +119,72 @@ export default function App() {
       />
 
       <main className="main-content">
-        <Header
-          onCreate={() => {
-            setEditingTask(null);
-            setIsModalOpen(true);
-          }}
-          search={search}
-          setSearch={setSearch}
-          priorityFilter={priorityFilter}
-          setPriorityFilter={setPriorityFilter}
-        />
-
-        <DndContext onDragEnd={handleDragEnd}>
-          <div className="board">
-            <DroppableColumn
-              title="TODO"
-              tasks={todo}
-              onDelete={handleDelete}
-              onEdit={(task) => {
-                setEditingTask(task);
+        {activePage === "Board" && (
+          <>
+            <Header
+              onCreate={() => {
+                setEditingTask(null);
                 setIsModalOpen(true);
               }}
+              search={search}
+              setSearch={setSearch}
+              priorityFilter={priorityFilter}
+              setPriorityFilter={setPriorityFilter}
             />
 
-            <DroppableColumn
-              title="IN PROGRESS"
-              tasks={progress}
-              onDelete={handleDelete}
-              onEdit={(task) => {
-                setEditingTask(task);
-                setIsModalOpen(true);
-              }}
-            />
+            <DndContext onDragEnd={handleDragEnd}>
+              <div className="board">
+                <DroppableColumn
+                  title="TODO"
+                  tasks={todo}
+                  onDelete={handleDelete}
+                  onEdit={(task) => {
+                    setEditingTask(task);
+                    setIsModalOpen(true);
+                  }}
+                />
 
-            <DroppableColumn
-              title="DONE"
-              tasks={done}
-              onDelete={handleDelete}
-              onEdit={(task) => {
-                setEditingTask(task);
-                setIsModalOpen(true);
-              }}
-            />
+                <DroppableColumn
+                  title="IN PROGRESS"
+                  tasks={progress}
+                  onDelete={handleDelete}
+                  onEdit={(task) => {
+                    setEditingTask(task);
+                    setIsModalOpen(true);
+                  }}
+                />
+
+                <DroppableColumn
+                  title="DONE"
+                  tasks={done}
+                  onDelete={handleDelete}
+                  onEdit={(task) => {
+                    setEditingTask(task);
+                    setIsModalOpen(true);
+                  }}
+                />
+              </div>
+            </DndContext>
+          </>
+        )}
+
+        {activePage === "Analytics" && (
+          <Analytics tasks={tasks} />
+        )}
+
+        {activePage === "Sprint" && (
+          <div className="coming-page">
+            <h1>🚀 Sprint Planner</h1>
+            <p>Coming in the next milestone.</p>
           </div>
-        </DndContext>
+        )}
+
+        {activePage === "Issues" && (
+          <div className="coming-page">
+            <h1>🐞 Issues</h1>
+            <p>Advanced issue management coming next.</p>
+          </div>
+        )}
       </main>
 
       {isModalOpen && (
