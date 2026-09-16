@@ -31,11 +31,15 @@ export default function App() {
   }, []);
 
   async function loadTasks() {
-    const data = await getTasks();
-    setTasks(data);
+    try {
+      const data = await getTasks();
+      setTasks(data);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  function generateNextId() {
+  function generateNextId(): string {
     const max = tasks.reduce((highest, task) => {
       const num = Number(task.id.replace("TASK-", ""));
       return num > highest ? num : highest;
@@ -44,23 +48,45 @@ export default function App() {
     return `TASK-${String(max + 1).padStart(3, "0")}`;
   }
 
-  async function handleCreate(task: Task) {
-    await createTask(task);
-    await loadTasks();
+  /* ---------- CREATE ---------- */
+
+  async function handleCreate(task: Task): Promise<void> {
+    try {
+      await createTask(task);
+      await loadTasks();
+
+      setIsModalOpen(false);
+      setEditingTask(null);
+    } catch (err) {
+      console.error(err);
+    }
   }
 
-  async function handleUpdate(task: Task) {
-    await updateTask(task.id, task);
-    await loadTasks();
-    setEditingTask(null);
+  /* ---------- UPDATE ---------- */
+
+  async function handleUpdate(task: Task): Promise<void> {
+    try {
+      await updateTask(task.id, task);
+      await loadTasks();
+
+      setIsModalOpen(false);
+      setEditingTask(null);
+    } catch (err) {
+      console.error(err);
+    }
   }
+
+  /* ---------- DELETE ---------- */
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Delete this task?")) return;
+    const ok = window.confirm("Delete this task?");
+    if (!ok) return;
 
     await deleteTask(id);
     await loadTasks();
   }
+
+  /* ---------- DRAG ---------- */
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -74,31 +100,34 @@ export default function App() {
 
     if (!current || current.status === newStatus) return;
 
-    await updateTask(taskId, {
+    const updated: Task = {
       ...current,
       status: newStatus,
-    });
+    };
 
+    await updateTask(taskId, updated);
     await loadTasks();
   }
 
-  const filteredTasks = tasks.filter((task) => {
-    const matchesSearch = task.title
+  /* ---------- SEARCH + FILTER ---------- */
+
+  const filtered = tasks.filter((task) => {
+    const searchMatch = task.title
       .toLowerCase()
       .includes(search.toLowerCase());
 
-    const matchesPriority =
+    const priorityMatch =
       priorityFilter === "All" ||
       task.priority === priorityFilter;
 
-    return matchesSearch && matchesPriority;
+    return searchMatch && priorityMatch;
   });
 
-  const todo = filteredTasks.filter((t) => t.status === "TODO");
-  const progress = filteredTasks.filter(
+  const todo = filtered.filter((t) => t.status === "TODO");
+  const progress = filtered.filter(
     (t) => t.status === "IN PROGRESS"
   );
-  const done = filteredTasks.filter((t) => t.status === "DONE");
+  const done = filtered.filter((t) => t.status === "DONE");
 
   return (
     <div className="app">
@@ -161,8 +190,8 @@ export default function App() {
           onCreate={handleCreate}
           onUpdate={handleUpdate}
           onClose={() => {
-            setEditingTask(null);
             setIsModalOpen(false);
+            setEditingTask(null);
           }}
         />
       )}

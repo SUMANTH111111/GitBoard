@@ -17,11 +17,9 @@ with app.app_context():
 
 app.register_blueprint(task_routes, url_prefix="/api")
 
-
 @app.route("/")
 def home():
     return {"message": "GitBoard Backend Running"}
-
 
 if __name__ == "__main__":
     app.run(host="127.0.0.1", port=5000, debug=True)
