@@ -10,4 +10,6 @@ export interface Task {
 
   due_date?: string;
   created_at?: string;
+
+  sprint_id?: number;
 }

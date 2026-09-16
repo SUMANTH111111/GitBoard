@@ -598,3 +598,113 @@ body::-webkit-scrollbar-track{
   }
 
 }
+/* ========= Sprint ========= */
+
+.sprint-page{
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+  height:100%;
+  overflow:auto;
+}
+
+.sprint-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.sprint-card{
+  background:rgba(15,23,42,.85);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:24px;
+}
+
+.active-badge{
+  color:#60A5FA;
+  font-size:12px;
+  font-weight:700;
+}
+
+.sprint-card h2{
+  margin:10px 0 6px;
+}
+
+.sprint-card p{
+  color:#94A3B8;
+}
+
+.progress-bar{
+  margin:18px 0 10px;
+  width:100%;
+  height:12px;
+  background:#1E293B;
+  border-radius:999px;
+}
+
+.progress-fill{
+  height:100%;
+  background:linear-gradient(90deg,#2563EB,#3B82F6);
+  border-radius:999px;
+}
+
+.progress-row{
+  display:flex;
+  justify-content:space-between;
+  color:#CBD5E1;
+}
+
+.task-table{
+  background:rgba(15,23,42,.85);
+  border-radius:18px;
+  padding:20px;
+}
+
+.table-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:14px 0;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.table-row p{
+  color:#94A3B8;
+  margin-top:3px;
+}
+
+.status{
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.status.TODO{
+  background:#1E3A8A;
+  color:#93C5FD;
+}
+
+.status.DONE{
+  background:#14532D;
+  color:#86EFAC;
+}
+
+.status.IN{
+  background:#78350F;
+  color:#FCD34D;
+}
+
+.empty-sprint{
+  height:70%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+}
+
+.empty{
+  color:#94A3B8;
+}

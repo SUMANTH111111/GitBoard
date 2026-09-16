@@ -8,9 +8,12 @@ import Header from "./components/Header";
 import Sidebar from "./components/Sidebar";
 import CreateIssueModal from "./components/CreateIssueModal";
 import DroppableColumn from "./components/DroppableColumn";
+
 import Analytics from "./pages/Analytics";
+import Sprint from "./pages/Sprint";
 
 import type { Task, Status } from "./types/task";
+
 import {
   getTasks,
   createTask,
@@ -20,10 +23,10 @@ import {
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [activePage, setActivePage] = useState("Board");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-
-  const [activePage, setActivePage] = useState("Board");
 
   const [search, setSearch] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("All");
@@ -33,12 +36,8 @@ export default function App() {
   }, []);
 
   async function loadTasks() {
-    try {
-      const data = await getTasks();
-      setTasks(data);
-    } catch (err) {
-      console.error(err);
-    }
+    const data = await getTasks();
+    setTasks(data);
   }
 
   function generateNextId() {
@@ -67,7 +66,8 @@ export default function App() {
   }
 
   async function handleDelete(id: string) {
-    if (!window.confirm("Delete this task?")) return;
+    const ok = window.confirm("Delete this task?");
+    if (!ok) return;
 
     await deleteTask(id);
     await loadTasks();
@@ -168,21 +168,18 @@ export default function App() {
           </>
         )}
 
-        {activePage === "Analytics" && (
-          <Analytics tasks={tasks} />
+        {activePage === "Sprint" && (
+          <Sprint tasks={tasks} />
         )}
 
-        {activePage === "Sprint" && (
-          <div className="coming-page">
-            <h1>🚀 Sprint Planner</h1>
-            <p>Coming in the next milestone.</p>
-          </div>
+        {activePage === "Analytics" && (
+          <Analytics tasks={tasks} />
         )}
 
         {activePage === "Issues" && (
           <div className="coming-page">
             <h1>🐞 Issues</h1>
-            <p>Advanced issue management coming next.</p>
+            <p>Advanced issue management coming soon.</p>
           </div>
         )}
       </main>
