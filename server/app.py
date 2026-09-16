@@ -6,6 +6,7 @@ from database import db
 
 from routes import task_routes
 from sprint_routes import sprint_routes
+from activity_routes import activity_routes
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -19,6 +20,7 @@ with app.app_context():
 
 app.register_blueprint(task_routes, url_prefix="/api")
 app.register_blueprint(sprint_routes, url_prefix="/api")
+app.register_blueprint(activity_routes, url_prefix="/api")
 
 @app.route("/")
 def home():

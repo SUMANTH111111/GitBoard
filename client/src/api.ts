@@ -1,6 +1,6 @@
 const API = "http://127.0.0.1:5000/api";
 
-// TASKS
+// ---------- TASKS ----------
 
 export async function getTasks() {
   const res = await fetch(`${API}/tasks`);
@@ -10,9 +10,7 @@ export async function getTasks() {
 export async function createTask(task: any) {
   await fetch(`${API}/tasks`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(task),
   });
 }
@@ -20,9 +18,7 @@ export async function createTask(task: any) {
 export async function updateTask(id: string, task: any) {
   await fetch(`${API}/tasks/${id}`, {
     method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(task),
   });
 }
@@ -33,7 +29,7 @@ export async function deleteTask(id: string) {
   });
 }
 
-// SPRINTS
+// ---------- SPRINT ----------
 
 export async function getSprints() {
   const res = await fetch(`${API}/sprints`);
@@ -43,21 +39,21 @@ export async function getSprints() {
 export async function createSprint(data: any) {
   await fetch(`${API}/sprints`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
   });
 }
 
-// ASSIGN TASK TO SPRINT
-
-export async function assignSprint(
-  task: any,
-  sprintId: number | null
-) {
+export async function assignSprint(task: any, sprintId: number | null) {
   return updateTask(task.id, {
     ...task,
     sprint_id: sprintId,
   });
+}
+
+// ---------- ACTIVITY ----------
+
+export async function getActivities() {
+  const res = await fetch(`${API}/activities`);
+  return res.json();
 }

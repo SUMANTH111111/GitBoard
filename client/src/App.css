@@ -742,3 +742,51 @@ body::-webkit-scrollbar-track{
 .delete-btn{
   color:#F87171;
 }
+/* ===== Activity Timeline ===== */
+
+.activity-card{
+  background:rgba(15,23,42,.82);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:22px;
+}
+
+.activity-card h3{
+  margin-bottom:18px;
+}
+
+.activity-row{
+  display:flex;
+  gap:14px;
+  padding:12px 0;
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+.activity-row:last-child{
+  border-bottom:none;
+}
+
+.activity-dot{
+  width:10px;
+  height:10px;
+  margin-top:8px;
+  border-radius:50%;
+  background:#3B82F6;
+  flex-shrink:0;
+}
+
+.activity-text{
+  display:flex;
+  flex-direction:column;
+}
+
+.activity-text strong{
+  color:white;
+  font-size:14px;
+}
+
+.activity-text span{
+  color:#94A3B8;
+  font-size:12px;
+  margin-top:3px;
+}

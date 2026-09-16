@@ -1,6 +1,11 @@
 from database import db
 from datetime import datetime
 
+
+# ==========================
+# Sprint Model
+# ==========================
+
 class Sprint(db.Model):
     __tablename__ = "sprints"
 
@@ -16,9 +21,13 @@ class Sprint(db.Model):
             "name": self.name,
             "start_date": self.start_date,
             "end_date": self.end_date,
-            "active": self.active
+            "active": self.active,
         }
 
+
+# ==========================
+# Task Model
+# ==========================
 
 class Task(db.Model):
     __tablename__ = "tasks"
@@ -29,9 +38,14 @@ class Task(db.Model):
     status = db.Column(db.String(30), nullable=False)
 
     due_date = db.Column(db.String(20))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    sprint_id = db.Column(db.Integer, db.ForeignKey("sprints.id"))
+    # ✅ Local time (IST)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    sprint_id = db.Column(
+        db.Integer,
+        db.ForeignKey("sprints.id")
+    )
 
     def to_dict(self):
         return {
@@ -41,5 +55,26 @@ class Task(db.Model):
             "status": self.status,
             "due_date": self.due_date,
             "created_at": self.created_at.isoformat(),
-            "sprint_id": self.sprint_id
+            "sprint_id": self.sprint_id,
+        }
+
+
+# ==========================
+# Activity Model
+# ==========================
+
+class Activity(db.Model):
+    __tablename__ = "activities"
+
+    id = db.Column(db.Integer, primary_key=True)
+    action = db.Column(db.String(200), nullable=False)
+
+    # ✅ Local time (IST)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "action": self.action,
+            "created_at": self.created_at.isoformat(),
         }
