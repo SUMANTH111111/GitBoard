@@ -10,7 +10,12 @@ import CreateIssueModal from "./components/CreateIssueModal";
 import DroppableColumn from "./components/DroppableColumn";
 
 import type { Task, Status } from "./types/task";
-import { getTasks, createTask, updateTask } from "./api";
+import {
+  getTasks,
+  createTask,
+  updateTask,
+  deleteTask,
+} from "./api";
 
 export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -49,6 +54,21 @@ export default function App() {
     }
   }
 
+  async function handleDelete(taskId: string) {
+    const confirmDelete = window.confirm(
+      "Delete this task permanently?"
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      await deleteTask(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error("Delete failed:", error);
+    }
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
 
@@ -67,7 +87,9 @@ export default function App() {
     };
 
     setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? updatedTask : t))
+      prev.map((t) =>
+        t.id === taskId ? updatedTask : t
+      )
     );
 
     try {
@@ -78,7 +100,9 @@ export default function App() {
   }
 
   const todo = tasks.filter((t) => t.status === "TODO");
-  const progress = tasks.filter((t) => t.status === "IN PROGRESS");
+  const progress = tasks.filter(
+    (t) => t.status === "IN PROGRESS"
+  );
   const done = tasks.filter((t) => t.status === "DONE");
 
   return (
@@ -93,9 +117,23 @@ export default function App() {
 
         <DndContext onDragEnd={handleDragEnd}>
           <div className="board">
-            <DroppableColumn title="TODO" tasks={todo} />
-            <DroppableColumn title="IN PROGRESS" tasks={progress} />
-            <DroppableColumn title="DONE" tasks={done} />
+            <DroppableColumn
+              title="TODO"
+              tasks={todo}
+              onDelete={handleDelete}
+            />
+
+            <DroppableColumn
+              title="IN PROGRESS"
+              tasks={progress}
+              onDelete={handleDelete}
+            />
+
+            <DroppableColumn
+              title="DONE"
+              tasks={done}
+              onDelete={handleDelete}
+            />
           </div>
         </DndContext>
       </main>

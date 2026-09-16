@@ -10,9 +10,14 @@ import type { Status, Task } from "../types/task";
 interface Props {
   title: Status;
   tasks: Task[];
+  onDelete: (id: string) => void;
 }
 
-export default function DroppableColumn({ title, tasks }: Props) {
+export default function DroppableColumn({
+  title,
+  tasks,
+  onDelete,
+}: Props) {
   const { setNodeRef } = useDroppable({
     id: title,
   });
@@ -29,7 +34,11 @@ export default function DroppableColumn({ title, tasks }: Props) {
         strategy={verticalListSortingStrategy}
       >
         {tasks.map((task) => (
-          <DraggableTaskCard key={task.id} task={task} />
+          <DraggableTaskCard
+            key={task.id}
+            task={task}
+            onDelete={onDelete}
+          />
         ))}
       </SortableContext>
     </section>
