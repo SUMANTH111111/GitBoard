@@ -6,11 +6,13 @@ import type { Task } from "../types/task";
 interface Props {
   task: Task;
   onDelete: (id: string) => void;
+  onEdit: (task: Task) => void;
 }
 
 export default function DraggableTaskCard({
   task,
   onDelete,
+  onEdit,
 }: Props) {
   const {
     attributes,
@@ -35,6 +37,7 @@ export default function DraggableTaskCard({
       {...attributes}
       {...listeners}
     >
+      {/* Top */}
       <div
         style={{
           display: "flex",
@@ -43,30 +46,66 @@ export default function DraggableTaskCard({
           marginBottom: "12px",
         }}
       >
-        <small style={{ color: "#64748b" }}>{task.id}</small>
-
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(task.id);
-          }}
-          style={{
-            background: "transparent",
-            border: "none",
-            color: "#ef4444",
-            cursor: "pointer",
-            fontSize: "18px",
-          }}
-        >
-          🗑
-        </button>
+        <small style={{ color: "#94a3b8" }}>{task.id}</small>
       </div>
 
+      {/* Title */}
       <h4>{task.title}</h4>
 
-      <span className={`priority ${task.priority}`}>
-        {task.priority}
-      </span>
+      {/* Bottom */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginTop: "12px",
+        }}
+      >
+        <span className={`priority ${task.priority}`}>
+          {task.priority}
+        </span>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "8px",
+          }}
+        >
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(task);
+            }}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "16px",
+            }}
+            title="Edit Task"
+          >
+            ✏️
+          </button>
+
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(task.id);
+            }}
+            style={{
+              background: "transparent",
+              border: "none",
+              cursor: "pointer",
+              fontSize: "16px",
+            }}
+            title="Delete Task"
+          >
+            🗑️
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

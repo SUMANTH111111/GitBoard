@@ -21,21 +21,18 @@ export default function App() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activePage, setActivePage] = useState("Board");
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
 
   useEffect(() => {
     loadTasks();
   }, []);
 
   async function loadTasks() {
-    try {
-      const data = await getTasks();
-      setTasks(data);
-    } catch (error) {
-      console.error("Failed to load tasks:", error);
-    }
+    const data = await getTasks();
+    setTasks(data);
   }
 
-  function generateNextId(): string {
+  function generateNextId() {
     const max = tasks.reduce((highest, task) => {
       const num = Number(task.id.replace("TASK-", ""));
       return num > highest ? num : highest;
@@ -45,28 +42,22 @@ export default function App() {
   }
 
   async function handleCreate(task: Task) {
-    try {
-      await createTask(task);
-      await loadTasks();
-      setIsModalOpen(false);
-    } catch (error) {
-      console.error("Create failed:", error);
-    }
+    await createTask(task);
+    await loadTasks();
   }
 
-  async function handleDelete(taskId: string) {
-    const confirmDelete = window.confirm(
-      "Delete this task permanently?"
-    );
+  async function handleUpdate(task: Task) {
+    await updateTask(task.id, task);
+    await loadTasks();
+    setEditingTask(null);
+  }
 
-    if (!confirmDelete) return;
+  async function handleDelete(id: string) {
+    const ok = window.confirm("Delete this task?");
+    if (!ok) return;
 
-    try {
-      await deleteTask(taskId);
-      await loadTasks();
-    } catch (error) {
-      console.error("Delete failed:", error);
-    }
+    await deleteTask(id);
+    await loadTasks();
   }
 
   async function handleDragEnd(event: DragEndEvent) {
@@ -81,22 +72,13 @@ export default function App() {
 
     if (!currentTask || currentTask.status === newStatus) return;
 
-    const updatedTask: Task = {
+    const updated: Task = {
       ...currentTask,
       status: newStatus,
     };
 
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId ? updatedTask : t
-      )
-    );
-
-    try {
-      await updateTask(taskId, updatedTask);
-    } catch {
-      await loadTasks();
-    }
+    await updateTask(taskId, updated);
+    await loadTasks();
   }
 
   const todo = tasks.filter((t) => t.status === "TODO");
@@ -113,7 +95,12 @@ export default function App() {
       />
 
       <main className="main-content">
-        <Header onCreate={() => setIsModalOpen(true)} />
+        <Header
+          onCreate={() => {
+            setEditingTask(null);
+            setIsModalOpen(true);
+          }}
+        />
 
         <DndContext onDragEnd={handleDragEnd}>
           <div className="board">
@@ -121,18 +108,30 @@ export default function App() {
               title="TODO"
               tasks={todo}
               onDelete={handleDelete}
+              onEdit={(task) => {
+                setEditingTask(task);
+                setIsModalOpen(true);
+              }}
             />
 
             <DroppableColumn
               title="IN PROGRESS"
               tasks={progress}
               onDelete={handleDelete}
+              onEdit={(task) => {
+                setEditingTask(task);
+                setIsModalOpen(true);
+              }}
             />
 
             <DroppableColumn
               title="DONE"
               tasks={done}
               onDelete={handleDelete}
+              onEdit={(task) => {
+                setEditingTask(task);
+                setIsModalOpen(true);
+              }}
             />
           </div>
         </DndContext>
@@ -141,8 +140,13 @@ export default function App() {
       {isModalOpen && (
         <CreateIssueModal
           nextId={generateNextId()}
-          onClose={() => setIsModalOpen(false)}
+          editingTask={editingTask}
           onCreate={handleCreate}
+          onUpdate={handleUpdate}
+          onClose={() => {
+            setEditingTask(null);
+            setIsModalOpen(false);
+          }}
         />
       )}
     </div>

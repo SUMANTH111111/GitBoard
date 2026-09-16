@@ -1,29 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Priority, Task } from "../types/task";
 
 interface Props {
   onClose: () => void;
   onCreate: (task: Task) => void;
   nextId: string;
+
+  editingTask?: Task | null;
+  onUpdate?: (task: Task) => void;
 }
 
 export default function CreateIssueModal({
   onClose,
   onCreate,
   nextId,
+  editingTask,
+  onUpdate,
 }: Props) {
   const [title, setTitle] = useState("");
   const [priority, setPriority] = useState<Priority>("Medium");
 
-  function handleCreate() {
+  useEffect(() => {
+    if (editingTask) {
+      setTitle(editingTask.title);
+      setPriority(editingTask.priority);
+    } else {
+      setTitle("");
+      setPriority("Medium");
+    }
+  }, [editingTask]);
+
+  function handleSave() {
     if (!title.trim()) return;
 
-    onCreate({
-      id: nextId,
-      title: title.trim(),
-      priority,
-      status: "TODO",
-    });
+    if (editingTask && onUpdate) {
+      onUpdate({
+        ...editingTask,
+        title: title.trim(),
+        priority,
+      });
+    } else {
+      onCreate({
+        id: nextId,
+        title: title.trim(),
+        priority,
+        status: "TODO",
+      });
+    }
 
     onClose();
   }
@@ -31,17 +54,21 @@ export default function CreateIssueModal({
   return (
     <div className="modal-overlay">
       <div className="modal">
-        <h2>Create New Issue</h2>
+        <h2>
+          {editingTask ? "Edit Issue" : "Create New Issue"}
+        </h2>
 
         <label>Task Title</label>
+
         <input
           type="text"
-          placeholder="Enter task name..."
+          placeholder="Enter task..."
           value={title}
           onChange={(e) => setTitle(e.target.value)}
         />
 
         <label>Priority</label>
+
         <select
           value={priority}
           onChange={(e) => setPriority(e.target.value as Priority)}
@@ -56,8 +83,8 @@ export default function CreateIssueModal({
             Cancel
           </button>
 
-          <button className="create" onClick={handleCreate}>
-            Create
+          <button className="create" onClick={handleSave}>
+            {editingTask ? "Save Changes" : "Create"}
           </button>
         </div>
       </div>

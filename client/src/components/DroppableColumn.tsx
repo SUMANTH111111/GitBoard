@@ -11,12 +11,14 @@ interface Props {
   title: Status;
   tasks: Task[];
   onDelete: (id: string) => void;
+  onEdit: (task: Task) => void;
 }
 
 export default function DroppableColumn({
   title,
   tasks,
   onDelete,
+  onEdit,
 }: Props) {
   const { setNodeRef } = useDroppable({
     id: title,
@@ -38,6 +40,7 @@ export default function DroppableColumn({
             key={task.id}
             task={task}
             onDelete={onDelete}
+            onEdit={onEdit}
           />
         ))}
       </SortableContext>
