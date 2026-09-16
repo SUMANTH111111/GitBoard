@@ -708,3 +708,37 @@ body::-webkit-scrollbar-track{
 .empty{
   color:#94A3B8;
 }
+.sprint-select{
+  width:100%;
+  margin-top:14px;
+  padding:9px;
+  border-radius:10px;
+  border:1px solid #334155;
+  background:#0F172A;
+  color:#E2E8F0;
+}
+
+.task-date{
+  margin-top:10px;
+  color:#CBD5E1;
+  font-size:13px;
+}
+
+.task-actions{
+  display:flex;
+  justify-content:space-between;
+  margin-top:14px;
+}
+
+.edit-btn,
+.delete-btn{
+  border:none;
+  background:none;
+  color:#60A5FA;
+  cursor:pointer;
+  font-size:13px;
+}
+
+.delete-btn{
+  color:#F87171;
+}

@@ -4,13 +4,14 @@ from models import Task
 
 task_routes = Blueprint("task_routes", __name__)
 
-# GET all tasks
+# GET ALL TASKS
 @task_routes.route("/tasks", methods=["GET"])
 def get_tasks():
     tasks = Task.query.all()
-    return jsonify([task.to_dict() for task in tasks])
+    return jsonify([t.to_dict() for t in tasks])
 
-# CREATE task
+
+# CREATE TASK
 @task_routes.route("/tasks", methods=["POST"])
 def create_task():
     data = request.get_json()
@@ -20,7 +21,8 @@ def create_task():
         title=data["title"],
         priority=data["priority"],
         status=data["status"],
-        due_date=data.get("due_date")
+        due_date=data.get("due_date"),
+        sprint_id=data.get("sprint_id")
     )
 
     db.session.add(task)
@@ -28,7 +30,8 @@ def create_task():
 
     return jsonify(task.to_dict()), 201
 
-# UPDATE task
+
+# UPDATE TASK
 @task_routes.route("/tasks/<string:task_id>", methods=["PUT"])
 def update_task(task_id):
     task = Task.query.get_or_404(task_id)
@@ -39,12 +42,14 @@ def update_task(task_id):
     task.priority = data.get("priority", task.priority)
     task.status = data.get("status", task.status)
     task.due_date = data.get("due_date", task.due_date)
+    task.sprint_id = data.get("sprint_id", task.sprint_id)
 
     db.session.commit()
 
     return jsonify(task.to_dict())
 
-# DELETE task
+
+# DELETE TASK
 @task_routes.route("/tasks/<string:task_id>", methods=["DELETE"])
 def delete_task(task_id):
     task = Task.query.get_or_404(task_id)
@@ -52,4 +57,4 @@ def delete_task(task_id):
     db.session.delete(task)
     db.session.commit()
 
-    return jsonify({"message": "Task deleted"})
+    return jsonify({"message": "Deleted"})

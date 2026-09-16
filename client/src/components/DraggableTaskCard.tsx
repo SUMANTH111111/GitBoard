@@ -1,43 +1,63 @@
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useEffect, useState } from "react";
+
 import type { Task } from "../types/task";
 
-interface Props{
-  task:Task;
-  onDelete:(id:string)=>void;
-  onEdit:(task:Task)=>void;
+import { getSprints, assignSprint } from "../api";
+
+interface Sprint {
+  id: number;
+  name: string;
+}
+
+interface Props {
+  task: Task;
+  onDelete: (id: string) => void;
+  onEdit: (task: Task) => void;
 }
 
 export default function DraggableTaskCard({
   task,
   onDelete,
-  onEdit
-}:Props){
-
-  const{
+  onEdit,
+}: Props) {
+  const {
     attributes,
     listeners,
     setNodeRef,
     transform,
-    transition
-  }=useSortable({
-    id:task.id
+    transition,
+  } = useSortable({
+    id: task.id,
   });
 
-  const style={
-    transform:CSS.Transform.toString(transform),
-    transition
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
   };
 
-  const today=new Date().toISOString().split("T")[0];
+  const [sprints, setSprints] = useState<Sprint[]>([]);
 
-  const overdue=
-    task.due_date &&
-    task.status!=="DONE" &&
-    task.due_date < today;
+  useEffect(() => {
+    async function load() {
+      const data = await getSprints();
+      setSprints(data);
+    }
 
-  return(
+    load();
+  }, []);
 
+  async function handleSprintChange(value: string) {
+    const sprint =
+      value === "" ? null : Number(value);
+
+    await assignSprint(task, sprint);
+
+    window.location.reload();
+  }
+
+  return (
     <div
       ref={setNodeRef}
       style={style}
@@ -45,90 +65,58 @@ export default function DraggableTaskCard({
       {...attributes}
       {...listeners}
     >
-
-      <small style={{color:"#64748b"}}>
-        {task.id}
-      </small>
+      <small>{task.id}</small>
 
       <h4>{task.title}</h4>
 
-      <div style={{marginBottom:"12px"}}>
-        <span className={`priority ${task.priority}`}>
-          {task.priority}
-        </span>
-      </div>
+      <span className={`priority ${task.priority}`}>
+        {task.priority}
+      </span>
 
-      {task.due_date &&(
-
-        <div
-          style={{
-            color:"#cbd5e1",
-            fontSize:"13px",
-            marginBottom:"10px"
-          }}
-        >
+      {task.due_date && (
+        <p className="task-date">
           📅 {task.due_date}
-        </div>
-
+        </p>
       )}
 
-      {overdue &&(
-
-        <div
-          style={{
-            color:"#f87171",
-            fontSize:"12px",
-            fontWeight:700,
-            marginBottom:"8px"
-          }}
-        >
-          🔴 Overdue
-        </div>
-
-      )}
-
-      <div
-        style={{
-          display:"flex",
-          justifyContent:"space-between"
-        }}
+      <select
+        className="sprint-select"
+        value={task.sprint_id ?? ""}
+        onClick={(e) => e.stopPropagation()}
+        onPointerDown={(e) => e.stopPropagation()}
+        onChange={(e) =>
+          handleSprintChange(e.target.value)
+        }
       >
+        <option value="">No Sprint</option>
 
+        {sprints.map((s) => (
+          <option
+            key={s.id}
+            value={s.id}
+          >
+            {s.name}
+          </option>
+        ))}
+      </select>
+
+      <div className="task-actions">
         <button
-          onPointerDown={(e)=>e.stopPropagation()}
-          onClick={(e)=>{
-            e.stopPropagation();
-            onEdit(task);
-          }}
-          style={{
-            background:"transparent",
-            border:"none",
-            color:"#60a5fa",
-            cursor:"pointer"
-          }}
+          className="edit-btn"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onEdit(task)}
         >
           ✏ Edit
         </button>
 
         <button
-          onPointerDown={(e)=>e.stopPropagation()}
-          onClick={(e)=>{
-            e.stopPropagation();
-            onDelete(task.id);
-          }}
-          style={{
-            background:"transparent",
-            border:"none",
-            color:"#f87171",
-            cursor:"pointer"
-          }}
+          className="delete-btn"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={() => onDelete(task.id)}
         >
           🗑 Delete
         </button>
-
       </div>
-
     </div>
-
   );
 }
